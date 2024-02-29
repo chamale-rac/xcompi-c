@@ -1,0 +1,27 @@
+"""
+@File name: constants.py
+@Module: Utils
+@Author: Samuel Chamalé
+@Date: 31/01/2024
+@Description: Contains the constants used in the implementation of the compiler.
+"""
+
+EPSILON = 'ϵ'
+LPAREN = '('
+RPAREN = ')'
+LBRACKET = '['
+RBRACKET = ']'
+SINGLE_QUOTE = "'"
+DOUBLE_QUOTE = '"'
+RANGE = '-'
+OR = '|'
+CONCAT = '•'
+ZERO_OR_ONE = '?'
+ONE_OR_MORE = '+'
+KLEENE_STAR = '*'
+TERMINATOR = '#'
+
+OPERATORS_PRECEDENCE = {LPAREN: 1, OR: 2, CONCAT: 3, ZERO_OR_ONE: 4,
+                        ONE_OR_MORE: 4, KLEENE_STAR: 4}
+
+TRIVIAL_CHARACTER_PRECEDENCE = 6
