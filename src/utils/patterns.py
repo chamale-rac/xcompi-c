@@ -1,5 +1,4 @@
 
-
 class Pattern(object):
     '''
     This class represents the pattern module.
@@ -16,4 +15,24 @@ class Pattern(object):
 ID = Pattern(
     'ID',
     f"['a'-'z']+"
+)
+
+WS = Pattern(
+    'WS',
+    f"( |['\t''\n'])+"
+)
+
+EQ = Pattern(
+    'EQ',
+    f"="
+)
+
+EXPR = Pattern(
+    'EXPR',
+    f"(['a'-'z'])"
+)
+
+COMMENT = Pattern(
+    'COMMENT',
+    f"\(\*(['A'-'Z''a'-'z''0'-'9']|\t| |,|\.|\-|(á|é|í|ó|ú))*\*\)"
 )

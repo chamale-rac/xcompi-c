@@ -146,12 +146,20 @@ class Expression(object):
         '''
         result = []
         skip_next = False
-        for c in infixRegEx:
+        for idx, c in enumerate(infixRegEx):
             if skip_next:
                 result.append(ord(c))
                 skip_next = False
             elif c == '\\':
+                # TODO: Consider special cases as \t, \n and \s
                 skip_next = True
+            elif c == ' ':
+                # If is inside a quote add as ASCII code, else appends as is
+                # Check have previous quote
+                if result[-1] in [SINGLE_QUOTE, DOUBLE_QUOTE] and infixRegEx[idx+1] in [SINGLE_QUOTE, DOUBLE_QUOTE]:
+                    result.append(ord(c))
+                else:
+                    result.append(c)
             elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE]:
                 result.append(ord(c))
             else:
@@ -162,9 +170,18 @@ class Expression(object):
         '''
         Characters to a list of ASCII codes.
         '''
-        return [
-            ord(character) for character in infixRegEx
-        ]
+        result = []
+        for idx, c in enumerate(infixRegEx):
+            if c == ' ':
+                # If is inside a quote add as ASCII code, else appends as is
+                # Check have previous quote
+                # TODO:Consider when space is inside a group, ex: "a b"
+                if result[-1] in [SINGLE_QUOTE, DOUBLE_QUOTE] and infixRegEx[idx+1] in [SINGLE_QUOTE, DOUBLE_QUOTE]:
+                    result.append(ord(c))
+                else:
+                    result.append(c)
+            else:
+                result.append(ord(c))
 
     def transformGroupsOfCharacters(self, infixRegEx: list) -> list:
         '''
@@ -224,7 +241,7 @@ class Expression(object):
                 # Each item needs to be separated by an OR
                 # Example [LPAREN, 97, OR, 98, OR, 99, RPAREN]
                 group_result.insert(0, LPAREN)
-                for i in range(1, len(group_result)*2, 2):
+                for i in range(2, len(group_result)*2, 2):
                     group_result.insert(i, OR)
                 # Pop the last OR
                 group_result.pop()
