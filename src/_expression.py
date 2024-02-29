@@ -218,7 +218,21 @@ class Expression(object):
                         group_result.append(collected[local_idx])
 
                 # Avoid repeating, so cast to set
-                result.extend(list(set(group_result)))
+                group_result = list(set(group_result))
+
+                # Group result need to have a LPAREN at the beginning and a RPAREN at the end
+                # Each item needs to be separated by an OR
+                # Example [LPAREN, 97, OR, 98, OR, 99, RPAREN]
+                group_result.insert(0, LPAREN)
+                for i in range(1, len(group_result)*2, 2):
+                    group_result.insert(i, OR)
+                # Pop the last OR
+                group_result.pop()
+                group_result.append(RPAREN)
+
+                result.extend(
+                    group_result
+                )
             else:
                 result.append(c)
             idx += 1

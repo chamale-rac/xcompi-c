@@ -1,4 +1,3 @@
-from src.utils.constants import MINOR_LETTERS, MAJOR_LETTERS
 
 
 class Pattern(object):
@@ -16,5 +15,5 @@ class Pattern(object):
 
 ID = Pattern(
     'ID',
-    f'[{MAJOR_LETTERS}{MINOR_LETTERS}]+'
+    f"['a'-'z']+"
 )

@@ -8,7 +8,7 @@ class App:
             "['0'-'9']",
             "[' ''\t''\n']",
             "['A'-'Z''a'-'z']",
-            '["\s\t\n"]'
+            '["\s\t\n"]+'
         ]
         for test_expression in test_expressions:
             self.expression = Expression(test_expression)
