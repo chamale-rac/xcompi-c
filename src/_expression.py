@@ -7,7 +7,7 @@
 """
 
 
-from src.utils.constants import RPAREN, LPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, OPERATORS_PRECEDENCE, TRIVIAL_CHARACTER_PRECEDENCE, LBRACKET, RBRACKET
+from src.utils.constants import RPAREN, LPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, OPERATORS_PRECEDENCE, TRIVIAL_CHARACTER_PRECEDENCE, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE
 from src.utils.tools import errorsManager
 
 
@@ -24,7 +24,6 @@ class Expression(object):
         '''
         self.errorsManager = errorsManager()
         self.infixRegEx: str = infixRegEx
-        self.process()
 
     def preprocess(self):
         # Step 1: Codify the regular expression using ascii codes, if operator it maintains the same
@@ -114,21 +113,28 @@ class Expression(object):
     def getOperatorPrecedence(self, operator): return OPERATORS_PRECEDENCE.get(
         operator, TRIVIAL_CHARACTER_PRECEDENCE)
 
-    def checkParenthesisBalance(self) -> bool:
+    def checkBalance(self) -> bool:
         '''
-        This function checks if the regular expression has balanced parenthesis and brackets.
+        This function checks if the regular expression has balanced parenthesis, brackets, single quotes and double quotes.
         Returns:
-        - True if the regular expression has balanced parenthesis and brackets, False otherwise.
+        - True if the regular expression has balanced parenthesis, brackets, single quotes and double quotes, False otherwise.
         '''
-        stack = []
+        symbols = {LPAREN: 0, LBRACKET: 0,
+                   SINGLE_QUOTE: False, DOUBLE_QUOTE: False}
         for c in self.infixRegEx:
-            if c in [LPAREN, LBRACKET]:
-                stack.append(c)
+            if c in symbols:
+                if c in [SINGLE_QUOTE, DOUBLE_QUOTE]:
+                    symbols[c] = not symbols[c]  # Toggle quote state
+                else:
+                    # Increment count for parenthesis or bracket
+                    symbols[c] += 1
             elif c in [RPAREN, RBRACKET]:
-                if not stack or (c == RPAREN and stack[-1] != LPAREN) or (c == RBRACKET and stack[-1] != LBRACKET):
+                if symbols[LPAREN if c == RPAREN else LBRACKET] == 0:
                     return False
-                stack.pop()
-        return not stack
+                # Decrement count for parenthesis or bracket
+                symbols[LPAREN if c == RPAREN else LBRACKET] -= 1
+        # Check if all counts are zero and quotes are closed
+        return all(not val for val in symbols.values())
 
     def hardCodify(self, infixRegEx: str) -> list:
         '''
@@ -142,14 +148,81 @@ class Expression(object):
         skip_next = False
         for c in infixRegEx:
             if skip_next:
-                result.append(str(ord(c)))
+                result.append(ord(c))
                 skip_next = False
             elif c == '\\':
                 skip_next = True
-            elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET]:
-                result.append(str(ord(c)))
+            elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE]:
+                result.append(ord(c))
             else:
                 result.append(c)
+        return result
+
+    def softCodify(self, infixRegEx: list) -> str:
+        '''
+        Characters to a list of ASCII codes.
+        '''
+        return [
+            ord(character) for character in infixRegEx
+        ]
+
+    def transformGroupsOfCharacters(self, infixRegEx: list) -> list:
+        '''
+        This function takes a regular expression in infix notation and returns the group of characters in the adequate format.
+        Parameters:
+        - infixRegEx: A regular expression in infix notation.
+        Returns:
+        - A list of characters.
+        '''
+        # TODO: verify that both number are valid intervals, example: a-z, not A-z; or 0-9, not 9-0, or 9-Z
+        # TODO: also consider cases when the character isn't inside a quote
+
+        result = []
+        idx = 0
+        while idx < len(infixRegEx):
+            c = infixRegEx[idx]
+            if c == LBRACKET:
+                idx += 1
+                group_result = []
+                collected = []
+
+                while infixRegEx[idx] != RBRACKET:
+                    if infixRegEx[idx] == SINGLE_QUOTE:
+                        # Skip quote
+                        idx += 1
+                        while infixRegEx[idx] != SINGLE_QUOTE:
+                            collected.append(infixRegEx[idx])
+                            idx += 1
+                    elif infixRegEx[idx] == DOUBLE_QUOTE:
+                        # Skip quote
+                        idx += 1
+                        while infixRegEx[idx] != DOUBLE_QUOTE:
+                            collected.append(infixRegEx[idx])
+                            idx += 1
+                    elif infixRegEx[idx] == RANGE:
+                        collected.append(infixRegEx[idx])
+
+                    idx += 1
+
+                for local_idx in range(len(collected)):
+                    if collected[local_idx] == RANGE:
+                        # Get the previous character in the collected list
+                        previous = collected[local_idx - 1]
+                        # Get the next character in the collected list
+                        next = collected[local_idx + 1]
+                        # Add all the characters between the previous and next character
+                        # The previous and next are already in ASCII code, so we can use them as integers
+                        for i in range(previous, next + 1):
+                            group_result.append(i)
+                    else:
+                        group_result.append(collected[local_idx])
+
+                # Avoid repeating, so cast to set
+                result.extend(list(set(group_result)))
+            else:
+                result.append(c)
+            idx += 1
+
         return result
 
     '''
