@@ -63,3 +63,14 @@ def readYalFile(file: str) -> str:
     '''
     with open(file, 'r', encoding='utf-8') as f:
         return f.read()
+
+
+def numberToLetter(number: int) -> str:
+    '''
+    This function return a letter from A to Z based on the number.
+    If the number is greater than 26, it calls itself recursively using the difference between the number and 26 to obtain a new combination.
+    '''
+    if number <= 26:
+        return chr(96 + number)
+    else:
+        return numberToLetter((number - 1) // 26) + numberToLetter((number - 1) % 26 + 1)

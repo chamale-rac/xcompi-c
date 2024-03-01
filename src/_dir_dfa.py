@@ -5,7 +5,7 @@ from .utils.structures.transition import Transition
 from .utils.constants import EPSILON, OR, CONCAT, KLEENE_STAR, TERMINATOR
 from collections import defaultdict
 
-# from .utils.tools import numberToLetter
+from .utils.tools import numberToLetter
 
 
 class DirectDeterministicFiniteAutomaton(Automaton):
@@ -29,7 +29,7 @@ class DirectDeterministicFiniteAutomaton(Automaton):
         self.preprocess()
         self.process()
         self.build()
-        # self.postprocessing()
+        self.postprocessing()
 
     def preprocess(self):
         '''

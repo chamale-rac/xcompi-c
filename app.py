@@ -14,6 +14,10 @@ def main():
     lexer.addPattern(EQ)
     lexer.addPattern(EXPR)
     lexer.buildPatterns()
+    # lexer.codifySourceCode()
+    # lexer.tokenize()
+
+    # print(lexer.symbolsTable)
 
 
 if __name__ == "__main__":

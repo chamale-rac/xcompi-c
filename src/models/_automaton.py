@@ -74,13 +74,13 @@ class Automaton(object):
 
         dot.render(f'output/{id}/{name}', format='png', cleanup=True)
 
-    def simulate(self, string: str):
+    def simulate(self, input: list):
         '''
         This method is made for simulate the automaton.
         '''
         start_time = time.perf_counter()
         statePointer = self.initialState.id
-        for c in string:
+        for idx, c in enumerate(input):
             found = False
             for transition in self.transitions:
                 if transition.tail_id == statePointer and transition.using == c:
@@ -88,6 +88,6 @@ class Automaton(object):
                     found = True
                     break
             if not found:
-                return False
+                return False, idx
         self.simulationTime = time.perf_counter() - start_time
-        return statePointer in [state.id for state in self.acceptanceStates]
+        return statePointer in [state.id for state in self.acceptanceStates], len(input)

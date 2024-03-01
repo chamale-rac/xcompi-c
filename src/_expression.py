@@ -62,7 +62,7 @@ class Expression(object):
                 stack.append(c)
             elif c == RPAREN:
                 while stack[-1] != LPAREN:
-                    postfix += stack.pop()
+                    postfix += [stack.pop()]
                 stack.pop()
             else:
                 while stack:
@@ -71,16 +71,16 @@ class Expression(object):
                         peekedChar)
                     cPrecedence = self.getOperatorPrecedence(c)
                     if peekedCharPrecedence >= cPrecedence:
-                        postfix += stack.pop()
+                        postfix += [stack.pop()]
                     else:
                         break
                 stack.append(c)
 
         while stack:
-            postfix += stack.pop()
+            postfix += [stack.pop()]
         return postfix
 
-    def addExplicitConcatenation(self, infixRegEx: str) -> str:
+    def addExplicitConcatenation(self, infixRegEx: list) -> str:
         '''
         This function takes a regular expression in infix notation and returns the regular expression with explicit concatenation operators.
         Parameters:
@@ -94,12 +94,10 @@ class Expression(object):
             c1 = infixRegEx[idx]
             if (idx + 1) < lenInfixRegEx:
                 c2 = infixRegEx[idx + 1]
-                res += c1
-
+                res += [c1]
                 if c1 not in [LPAREN, OR] and c2 != RPAREN and c2 not in [OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR]:
                     res += CONCAT
-
-        res += infixRegEx[-1]
+        res += [infixRegEx[-1]]
         return res
 
     '''
@@ -177,11 +175,12 @@ class Expression(object):
                 # Check have previous quote
                 # TODO:Consider when space is inside a group, ex: "a b"
                 if result[-1] in [SINGLE_QUOTE, DOUBLE_QUOTE] and infixRegEx[idx+1] in [SINGLE_QUOTE, DOUBLE_QUOTE]:
-                    result.append(ord(c))
+                    result.append(str(ord(c)))
                 else:
-                    result.append(c)
+                    result.append(str(c))
             else:
-                result.append(ord(c))
+                result.append(str(ord(c)))
+        return result
 
     def transformGroupsOfCharacters(self, infixRegEx: list) -> list:
         '''
