@@ -5,7 +5,8 @@
 @Date: 31/01/2024
 @Description: This file contains main algorithms for the regular expression module.
 """
-
+# TODO: consider changing the notation for '' and  "" to be detected as a single character
+# or maybe not cause I can extract them.
 
 from src.utils.constants import RPAREN, LPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, OPERATORS_PRECEDENCE, TRIVIAL_CHARACTER_PRECEDENCE, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE
 from src.utils.tools import errorsManager
@@ -174,10 +175,10 @@ class Expression(object):
                 # If is inside a quote add as ASCII code, else appends as is
                 # Check have previous quote
                 # TODO:Consider when space is inside a group, ex: "a b"
-                if result[-1] in [SINGLE_QUOTE, DOUBLE_QUOTE] and infixRegEx[idx+1] in [SINGLE_QUOTE, DOUBLE_QUOTE]:
+                if result[-1] in [str(ord(SINGLE_QUOTE)), str(ord(DOUBLE_QUOTE))] and infixRegEx[idx+1] in [SINGLE_QUOTE, DOUBLE_QUOTE]:
                     result.append(str(ord(c)))
                 else:
-                    result.append(str(c))
+                    result.append(c)
             else:
                 result.append(str(ord(c)))
         return result

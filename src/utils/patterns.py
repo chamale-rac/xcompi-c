@@ -20,7 +20,7 @@ class Pattern(object):
         '''
         This function builds the DFA for the pattern.
         '''
-        # print(self.name)
+        # TODO: errors manager
         self.expr = Expression(self.pattern)
         self.expr.infixRegEx = self.expr.hardCodify(
             self.expr.infixRegEx
@@ -29,29 +29,18 @@ class Pattern(object):
             self.expr.infixRegEx
         )
 
-        # print('transformGroupsOfCharacters')
-        # print(self.expr.infixRegEx)
         self.expr.infixRegEx = self.expr.addExplicitConcatenation(
             self.expr.infixRegEx
         )
 
-        # print('addExplicitConcatenation')
-        # print(self.expr.infixRegEx)
         self.expr.infixRegEx = self.expr.shuntingYard(
             self.expr.infixRegEx
         )
 
-        # print('shuntingYard')
-        # print(self.expr.infixRegEx)
         self.ast = AST(self.expr.infixRegEx)
+
         self.dir_dfa = DirDFA(self.ast.root.deepCopy())
         self.min_dir_dfa = MinDFA(self.dir_dfa, self.ast.alphabet)
-        # self.min_dir_dfa.draw(
-        #     'Min Dir DFA', idx, self.name
-        # )
-        # self.dir_dfa.draw(
-        #     'Dir DFA', idx, self.name
-        # )
 
 
 ID = Pattern(
@@ -69,9 +58,14 @@ EQ = Pattern(
     f"="
 )
 
+RETURN = Pattern(
+    'RETURN',
+    "\{(['A'-'Z''a'-'z']| )*\}"
+)
+
 EXPR = Pattern(
     'EXPR',
-    f"(['A'-'Z''a'-'z''0'-'9']|\\\'|\-|\(\)\[\]\+\*\?|.\|)+"
+    f"(['A'-'Z''a'-'z''0'-'9'' ']|\\\'|\-|\||\(|\)|\[|\]|\+|\*|\?|.|\\\\)+"
 )
 
 COMMENT = Pattern(
