@@ -61,5 +61,5 @@ def readYalFile(file: str) -> str:
     Returns:
     - The content of the file.
     '''
-    with open(file, 'r') as f:
+    with open(file, 'r', encoding='utf-8') as f:
         return f.read()

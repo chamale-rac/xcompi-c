@@ -1,3 +1,8 @@
+from src._expression import Expression
+from src._ast import AbstractSyntaxTree as AST
+from src._dir_dfa import DirectDeterministicFiniteAutomaton as DirDFA
+from src._min_dfa import MinimizedDeterministicFiniteAutomaton as MinDFA
+
 
 class Pattern(object):
     '''
@@ -10,6 +15,28 @@ class Pattern(object):
 
         self.name: str = name
         self.pattern: str = pattern
+
+    def build(self) -> None:
+        '''
+        This function builds the DFA for the pattern.
+        '''
+        self.expr = Expression(self.pattern)
+        self.expr.infixRegEx = self.expr.hardCodify(
+            self.expr.infixRegEx
+        )
+        self.expr.infixRegEx = self.expr.transformGroupsOfCharacters(
+            self.expr.infixRegEx
+        )
+        self.expr.infixRegEx = self.expr.addExplicitConcatenation(
+            self.expr.infixRegEx
+        )
+        self.expr.infixRegEx = self.expr.shuntingYard(
+            self.expr.infixRegEx
+        )
+
+        self.ast = AST(self.expr.infixRegEx)
+        self.dir_dfa = DirDFA(self.ast.root.deepCopy())
+        self.min_dir_dfa = MinDFA(self.dir_dfa, self.ast.alphabet)
 
 
 ID = Pattern(
@@ -29,7 +56,7 @@ EQ = Pattern(
 
 EXPR = Pattern(
     'EXPR',
-    f"(['a'-'z'])"
+    f"(['A'-'Z''a'-'z''0'-'9']|\\\'|\-|\(\)\[\]\+\*\?|.\|)+"
 )
 
 COMMENT = Pattern(

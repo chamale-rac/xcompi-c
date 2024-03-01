@@ -148,20 +148,20 @@ class Expression(object):
         skip_next = False
         for idx, c in enumerate(infixRegEx):
             if skip_next:
-                result.append(ord(c))
+                # TODO: Consider special cases as \t, \n and \s
+                result.append(str(ord(c)))
                 skip_next = False
             elif c == '\\':
-                # TODO: Consider special cases as \t, \n and \s
                 skip_next = True
             elif c == ' ':
                 # If is inside a quote add as ASCII code, else appends as is
                 # Check have previous quote
                 if result[-1] in [SINGLE_QUOTE, DOUBLE_QUOTE] and infixRegEx[idx+1] in [SINGLE_QUOTE, DOUBLE_QUOTE]:
-                    result.append(ord(c))
+                    result.append(str(ord(c)))
                 else:
                     result.append(c)
             elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE]:
-                result.append(ord(c))
+                result.append(str(ord(c)))
             else:
                 result.append(c)
         return result
@@ -229,8 +229,8 @@ class Expression(object):
                         next = collected[local_idx + 1]
                         # Add all the characters between the previous and next character
                         # The previous and next are already in ASCII code, so we can use them as integers
-                        for i in range(previous, next + 1):
-                            group_result.append(i)
+                        for i in range(int(previous), int(next) + 1):
+                            group_result.append(str(i))
                     else:
                         group_result.append(collected[local_idx])
 
