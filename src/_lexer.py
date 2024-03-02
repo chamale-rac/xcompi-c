@@ -49,7 +49,9 @@ class Lexer(object):
         This function codifies the source code.
         '''
         self.expr = Expression(self.sourceCode)
-        self.expr.infixRegEx = self.expr.softCodify(
+
+        self.unCodified = self.expr.infixRegEx
+        self.codified = self.expr.softCodify(
             self.expr.infixRegEx
         )
 
@@ -73,7 +75,7 @@ class Lexer(object):
         '''
         self.sequences[sequenceID] = sequence
 
-    def tokenize(self):
+    def tokenize(self, usingLongestMatch: bool = True):
         '''
         This function tokenizes the source code.
         '''
@@ -86,21 +88,29 @@ class Lexer(object):
         # This will be done by sending the entire source code to the DFAs of each pattern.
         # If it is true, then we will get the longest match, and update the lexemeBegin and forward pointers.
 
-        while forward < len(self.expr.infixRegEx):
-            longestMatch = None
+        codified = self.codified
+        unCodified = self.unCodified
+
+        while forward < len(codified):
+            match = None
             for pattern in self.patterns.values():
                 _, idx = pattern.min_dir_dfa.simulate(
-                    self.expr.infixRegEx[forward:]
+                    codified[forward:]
                 )
-                if longestMatch is None:
+                if match is None:
                     if idx > 0:
-                        longestMatch = (pattern.name, idx)
+                        match = (pattern.name, idx)
                 else:
-                    if idx > longestMatch[1]:
-                        longestMatch = (pattern.name, idx)
-            if longestMatch is not None:
+                    if usingLongestMatch:
+                        if idx > match[1]:
+                            match = (pattern.name, idx)
+                    else:
+                        if idx < match[1]:
+                            match = (pattern.name, idx)
+            if match is not None:
+                # Save also the original
                 self.symbolsTable.append(Symbol(
-                    longestMatch[0], self.expr.infixRegEx[forward:forward + longestMatch[1]]))
-                forward += longestMatch[1]
+                    match[0], codified[forward:forward + match[1]], unCodified[forward:forward + match[1]]))
+                forward += match[1]
             else:
                 break
