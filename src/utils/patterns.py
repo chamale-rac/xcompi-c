@@ -42,6 +42,8 @@ class Pattern(object):
         self.dir_dfa = DirDFA(self.ast.root.deepCopy())
         self.min_dir_dfa = MinDFA(self.dir_dfa, self.ast.alphabet)
 
+# LEXER PASS PATTERNS
+
 
 ID = Pattern(
     'ID',
@@ -71,4 +73,10 @@ EXPR = Pattern(
 COMMENT = Pattern(
     'COMMENT',
     f"\(\*(['A'-'Z''a'-'z''0'-'9']|\t| |,|\.|\-|(á|é|í|ó|ú))*\*\)"
+)
+
+# YAL SEQ PASS PATTERNS
+LET = Pattern(
+    ID.name,
+    f"let"
 )
