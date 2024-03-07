@@ -1,4 +1,4 @@
-from src._expression import Expression
+# from src._expression import Expression
 # print(ord(' '))
 # print(ord('\''))
 # print(ord("'"))
@@ -17,10 +17,14 @@ from src._expression import Expression
 # expr = Expression(string)
 # print(expr.hardCodify(string))
 
-string = f"(['A'-'Z''a'-'z''0'-'9'' ']|\\\'|\-|\||\(|\)|\[|\]|\+|\*|\?|.|\\\\)+"
-expr = Expression(string)
-print(expr.transformGroupsOfCharacters(expr.hardCodify(string)))
+# string = f"\[(['A'-'Z''a'-'z''0'-'9'' ']|\\\'|\\\\)+\]"
+# expr = Expression(string)
+# print(
+#     expr.shuntingYard(
+#         expr.transformGroupsOfCharacters(expr.hardCodify(string))
+#     )
+# )
 
-string = "[' ''\t''\n']"
-expr = Expression(string)
-print(expr.softCodify(string))
+from src.utils.patterns import ID
+
+ID.build(0)

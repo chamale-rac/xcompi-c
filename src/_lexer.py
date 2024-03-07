@@ -8,14 +8,15 @@ class Lexer(object):
     This class represents the lexer module.
     '''
 
-    def __init__(self, sourceCode: str):
+    def __init__(self, sourceCode: str = None):
         '''
         This is the constructor of the class.
         Parameters:
         - sourceCode: The source code to be tokenized.
         '''
         self.sourceCode: str = sourceCode
-        self.codifySourceCode()
+        if sourceCode is not None:
+            self.codifySourceCode()
         self.patterns: dict = {}
         self.sequences: dict = {}
         self.symbolsTable: list[Symbol] = []
@@ -66,6 +67,25 @@ class Lexer(object):
                    self.symbolsTable)
         )
 
+    def removeSymbolsByMatch(self, withPattern: Pattern):
+        removedAmount = 0
+        internal_lexer = Lexer()
+        internal_lexer.addPatterns([withPattern])
+        internal_lexer.buildPatterns()
+        for symbol in self.symbolsTable:
+            if symbol.type != withPattern.name:
+                continue
+
+            internal_lexer.codified = symbol.content
+            internal_lexer.unCodified = symbol.original
+            internal_lexer.tokenize()
+
+            if len(internal_lexer.symbolsTable) != 0:
+                self.symbolsTable.remove(symbol)
+                removedAmount += 1
+
+        return removedAmount
+
     def addSequence(self, sequenceID: str, sequence: list):
         '''
         This function adds a sequence to the sequences dictionary.
@@ -105,7 +125,7 @@ class Lexer(object):
                         if idx > match[1]:
                             match = (pattern.name, idx)
                     else:
-                        if idx < match[1]:
+                        if idx < match[1] and idx > 0:
                             match = (pattern.name, idx)
             if match is not None:
                 # Save also the original
@@ -114,3 +134,4 @@ class Lexer(object):
                 forward += match[1]
             else:
                 break
+                # TODO: raise error

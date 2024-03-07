@@ -18,7 +18,7 @@ class Expression(object):
     This class represents the regular expression module.
     '''
 
-    def __init__(self, infixRegEx: str):
+    def __init__(self, infixRegEx: str = None):
         '''
         This is the constructor of the class.
         Parameters:
@@ -149,7 +149,14 @@ class Expression(object):
         for idx, c in enumerate(infixRegEx):
             if skip_next:
                 # TODO: Consider special cases as \t, \n and \s
-                result.append(str(ord(c)))
+                if c == 'n':
+                    result.append(str(ord('\n')))
+                elif c == 't':
+                    result.append(str(ord('\t')))
+                elif c == 's':
+                    result.append(str(ord(' ')))
+                else:
+                    result.append(str(ord(c)))
                 skip_next = False
             elif c == '\\':
                 skip_next = True
@@ -160,6 +167,14 @@ class Expression(object):
                     result.append(str(ord(c)))
                 else:
                     result.append(c)
+            elif c == '_':
+                print('UNDERSCORE')
+                # Number from 0 to 255, with | operator, ex: 0 | 1 | 2 | ... | 255
+                for i in range(256):
+                    result.append(str(i))
+                    if i != 255:
+                        result.append(OR)
+                print('END UNDERSCORE')
             elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE]:
                 result.append(str(ord(c)))
             else:
@@ -182,6 +197,29 @@ class Expression(object):
                     result.append(c)
             else:
                 result.append(str(ord(c)))
+        return result
+
+    def transformSingleCharacters(self, infixRegEx: list) -> list:
+        # TODO transform based on double quotes
+        '''
+        This function takes a regular expression in infix notation and returns the single characters in the adequate format.
+        Parameters:
+        - infixRegEx: A regular expression in infix notation.
+        Returns:
+        - A list of characters.
+        '''
+        result = []
+        idx = 0
+        while idx < len(infixRegEx):
+            c = infixRegEx[idx]
+            if c == SINGLE_QUOTE:
+                idx += 1
+                while infixRegEx[idx] != SINGLE_QUOTE:
+                    result.append(infixRegEx[idx])
+                    idx += 1
+            else:
+                result.append(c)
+            idx += 1
         return result
 
     def transformGroupsOfCharacters(self, infixRegEx: list) -> list:
@@ -209,7 +247,11 @@ class Expression(object):
                         # Skip quote
                         idx += 1
                         while infixRegEx[idx] != SINGLE_QUOTE:
-                            collected.append(infixRegEx[idx])
+                            if infixRegEx[idx] in [RANGE, ONE_OR_MORE]:
+                                print('RANGE')
+                                collected.append(str(ord(infixRegEx[idx])))
+                            else:
+                                collected.append(infixRegEx[idx])
                             idx += 1
                     elif infixRegEx[idx] == DOUBLE_QUOTE:
                         # Skip quote
@@ -224,6 +266,7 @@ class Expression(object):
 
                 for local_idx in range(len(collected)):
                     if collected[local_idx] == RANGE:
+
                         # Get the previous character in the collected list
                         previous = collected[local_idx - 1]
                         # Get the next character in the collected list
