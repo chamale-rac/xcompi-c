@@ -3,6 +3,7 @@ from src.utils.patterns import Pattern
 from src.utils.constants import MATCH, EXIST, IDENT, VALUE, EXTRACT_REMINDER
 from src.utils.structures.symbol import Symbol
 from src.utils.patterns import CHAR
+from src.utils.tools import errorsManager
 
 
 class YalSequencer(object):
@@ -16,6 +17,7 @@ class YalSequencer(object):
         Parameters: 
         - lexer: A lexer object.
         '''
+        self.errorsManager = errorsManager()
         self.lexer: Tokenizer = lexer
         self.identSequence: list = identSequence
         self.functions: dict = {
@@ -46,10 +48,7 @@ class YalSequencer(object):
                     # Reminders all the symbols that are after the last symbol that was processed.
                     self.reminders.extend(
                         self.lexer.symbolsTable[symbolsPointer:])
-
-                    # Then break the loop
                     break
-                # TODO: Consider adding a EXTRACT_INTERVAL
 
             functionResult = usingFunction(symbolsPointer, sequencePointer)
 
@@ -59,6 +58,12 @@ class YalSequencer(object):
                 if sequencePointer >= len(self.identSequence):
                     sequencePointer = 0
             else:
+                if sequencePointer > 0:
+                    self.errorsManager.addError(
+                        f'While verifying {self.identSequence[sequencePointer][0].name} is\did {self.identSequence[sequencePointer][1]} in sequence, over \"{self.lexer.symbolsTable[symbolsPointer].original}\" at position {self.lexer.symbolsTable[symbolsPointer].position}',
+                        'Identity definition is not correct.'
+                    )
+                    break
                 symbolsPointer += 1
                 sequencePointer = 0
 
@@ -112,7 +117,16 @@ class YalSequencer(object):
             for subSymbol in lexer.symbolsTable:
                 if subSymbol.type == self.extract.name:
                     # Get the definition of the symbol, using the identifier. An looking on idents.
-                    value.extend(self.idents.get(subSymbol.original, None))
+                    get_original = self.idents.get(subSymbol.original, None)
+
+                    if get_original is None:
+                        self.errorsManager.addError(
+                            f'Previous definition of \"{subSymbol.original}\" not found',
+                            f'Cant compose the value for the identity \"{self.currentIdent}\".'
+                        )
+                        return False
+
+                    value.extend()
                 else:
                     value.extend(subSymbol.original)
 

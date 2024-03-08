@@ -1,10 +1,12 @@
+from src.utils.patterns import WS
+
 
 class Symbol(object):
     '''
     This class represents a symbol.
     '''
 
-    def __init__(self, type: str, content: str, original: str):
+    def __init__(self, type: str, content: str, original: str, position: int = None):
         '''
         This is the constructor of the class.
         Parameters:
@@ -14,9 +16,12 @@ class Symbol(object):
         self.type: str = type
         self.content: str = content
         self.original: str = original
+        self.position: int = position
 
     def __str__(self) -> str:
         '''
         This function returns the string representation of the symbol.
         '''
-        return f'{self.type} -> {self.content} -> {self.original}'
+        if self.type == WS.name:
+            return f'{self.type} -> '
+        return f'{self.type} -> {self.original}'

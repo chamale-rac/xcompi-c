@@ -24,10 +24,22 @@ def main():
     draw_subtrees = args.draw_subtrees
 
     fileContent = readYalFile(file_path)
+    print('✔ File read successfully')
 
     lexer = Tokenizer(fileContent)
     lexer.addPatterns([COMMENT, WS, ID, EQ, EXPR, RETURN])
     lexer.tokenize()
+
+    if lexer.errorsManager.haveErrors():
+        lexer.errorsManager.printErrors(
+            '✖ Tokens has not been generated successfully')
+        print('Exiting...')
+        return
+
+    print('✔ Tokens has been generated successfully')
+    for idx, symbol in enumerate(lexer.symbolsTable):
+        print(f'\t[{idx}] {symbol}')
+
     lexer.removeSymbols([COMMENT, RETURN])
 
     yal_let = YalSeq(
@@ -46,6 +58,11 @@ def main():
     )
 
     yal_let.extractIdent()
+    if yal_let.errorsManager.haveErrors():
+        yal_let.errorsManager.printErrors('✖ Identities extraction failed')
+        print('Exiting...')
+        return
+    print('✔ Identities extraction successful')
 
     yal_rule = YalSeq(
         lexer,

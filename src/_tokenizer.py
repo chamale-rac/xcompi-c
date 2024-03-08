@@ -1,6 +1,7 @@
 from src.utils.patterns import Pattern
 from src.utils.structures.symbol import Symbol
 from src._expression import Expression
+from src.utils.tools import errorsManager
 
 
 class Tokenizer(object):
@@ -20,6 +21,7 @@ class Tokenizer(object):
         self.patterns: dict = {}
         self.sequences: dict = {}
         self.symbolsTable: list[Symbol] = []
+        self.errorsManager = errorsManager()
 
     def addPatterns(self, patterns: list[Pattern]) -> None:
         '''
@@ -122,8 +124,10 @@ class Tokenizer(object):
             if match is not None:
                 # Save also the original
                 self.symbolsTable.append(Symbol(
-                    match[0], codified[forward:forward + match[1]], unCodified[forward:forward + match[1]]))
+                    match[0], codified[forward:forward + match[1]], unCodified[forward:forward + match[1]], forward))
                 forward += match[1]
             else:
+
+                self.errorsManager.addError(
+                    f'No pattern found for character \"{unCodified[forward]}\" at position \"{forward}\"', 'Not all characters were tokenized')
                 break
-                # TODO: raise error
