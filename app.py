@@ -35,6 +35,12 @@ def main():
             '✖ Tokens has not been generated successfully')
         return
 
+    if len(lexer.symbolsTable) == 0:
+        print('✖ No tokens generated')
+        print('\tError: No tokens generated')
+        print('\tSuggestion: Check your .yal file have some content to be tokenized')
+        return
+
     print('✔ Tokens has been generated successfully:')
     for idx, symbol in enumerate(lexer.symbolsTable):
         print(f'\t[{idx}] {symbol}')
@@ -64,7 +70,7 @@ def main():
 
     if draw_subtrees:
         if len(yal_let.idents) == 0:
-            print('✔ No subtrees to draw')
+            print('✖ No subtrees to draw')
         else:
             print('✔ Drawing subtrees:')
             for idx, ident in enumerate(yal_let.idents.keys()):
@@ -134,7 +140,7 @@ def main():
         print('\tSuggestion: Check the rule definition on your .yal file')
         return
 
-    final_ast.draw('FINAL_AST', dir_name, 'FINAL AST', False)
+    final_ast.draw('final_ast', dir_name, 'Final AST', False)
     print('✔ Final AST building and rendering has been completed successfully')
     print('✔ All Done!')
 

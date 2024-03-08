@@ -25,6 +25,6 @@
 #     )
 # )
 
-from src.utils.patterns import ID
+from src.utils.patterns import RULE
 
-ID.build(0)
+RULE.draw(0)

@@ -78,9 +78,11 @@ class YalSequencer(object):
         lexer.unCodified = symbol.original
         lexer.codified = symbol.content
         lexer.addPattern(sequence)
-        lexer.tokenize()
+        lexer.tokenize(True)
 
         if len(lexer.symbolsTable) == 0:
+            return False
+        if len(lexer.symbolsTable) > 1:
             return False
 
         return True

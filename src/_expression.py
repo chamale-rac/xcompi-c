@@ -225,6 +225,7 @@ class Expression(object):
                 if idx < len(infixRegEx) and infixRegEx[idx] == HASHTAG:
                     first_group = group_result
                     extend_this = False
+                    idx += 1
 
                 if extend_this:
                     group_result.insert(0, LPAREN)
