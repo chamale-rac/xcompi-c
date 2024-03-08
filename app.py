@@ -24,7 +24,7 @@ def main():
     draw_subtrees = args.draw_subtrees
 
     fileContent = readYalFile(file_path)
-    print('✔ File read successfully')
+    print(f'✔ File read successfully from {file_path}')
 
     lexer = Tokenizer(fileContent)
     lexer.addPatterns([COMMENT, WS, ID, EQ, EXPR, RETURN])
@@ -33,10 +33,9 @@ def main():
     if lexer.errorsManager.haveErrors():
         lexer.errorsManager.printErrors(
             '✖ Tokens has not been generated successfully')
-        print('Exiting...')
         return
 
-    print('✔ Tokens has been generated successfully')
+    print('✔ Tokens has been generated successfully:')
     for idx, symbol in enumerate(lexer.symbolsTable):
         print(f'\t[{idx}] {symbol}')
 
@@ -60,9 +59,22 @@ def main():
     yal_let.extractIdent()
     if yal_let.errorsManager.haveErrors():
         yal_let.errorsManager.printErrors('✖ Identities extraction failed')
-        print('Exiting...')
         return
     print('✔ Identities extraction successful')
+
+    if draw_subtrees:
+        if len(yal_let.idents) == 0:
+            print('✔ No subtrees to draw')
+        else:
+            print('✔ Drawing subtrees:')
+            for idx, ident in enumerate(yal_let.idents.keys()):
+                this_expression: Expression = Expression(yal_let.idents[ident])
+                this_expression.hardProcess()
+                this_ast: AST = AST(this_expression.infixRegEx)
+                this_ast.draw(ident, dir_name, ident, False)
+                print(f'\t[{idx}] \"{ident}\" AST has been drawn successfully')
+    else:
+        print('✔ Subtrees drawing skipped, as per user request')
 
     yal_rule = YalSeq(
         lexer,
@@ -80,44 +92,53 @@ def main():
 
     yal_rule.extractIdent()
 
+    if yal_rule.errorsManager.haveErrors():
+        yal_rule.errorsManager.printErrors(
+            '✖ Rule extraction failed')
+        return
+    elif len(yal_rule.reminders) == 0:
+        print('✖ No rule found')
+        print('\tError: No rule found')
+        print('\tSuggestion: Check you have a rule defined in your .yal file')
+        return
+    print('✔ Rule extraction successful')
+
+    print('✔ Building the final AST')
+
     rule_lexer = Tokenizer()
     rule_lexer.symbolsTable = yal_rule.reminders
-
     rule_lexer.removeSymbols([WS])
-    removedAmount = rule_lexer.removeSymbolsByMatch(OR)
-    if removedAmount == len(rule_lexer.symbolsTable) - 1:
-        print('The rule was removed')
-    else:
-        # RAISE AN ERROR
-        print('Error in definition')
-
-    if draw_subtrees:
-        for ident in yal_let.idents.keys():
-            this_expression: Expression = Expression(yal_let.idents[ident])
-            this_expression.hardProcess()
-            this_ast: AST = AST(this_expression.infixRegEx)
-            this_ast.draw(ident, dir_name, ident, False)
 
     final_expression: list = []
 
     for symbol in rule_lexer.symbolsTable:
         if symbol.type == ID.name:
-            final_expression.extend(yal_let.idents[symbol.original])
+            get_original = yal_let.idents.get(symbol.original, None)
+            if get_original:
+                final_expression.extend(yal_let.idents[symbol.original])
+            else:
+                print(f'✖ Final expression building failed:')
+                print(f'\tError: \"{symbol.original}\" is not defined')
+                print(f'\tSuggestion: Check the rule definition on your .yal file')
+                return
         else:
             final_expression.extend(symbol.original)
-        final_expression.append('|')
-
-    # Remove the last character, cause the last character is a '|'
-    final_expression.pop()
 
     final_expression: Expression = Expression(final_expression)
     final_expression.hardProcess()
 
     final_ast: AST = AST(final_expression.infixRegEx)
-    final_ast.draw('FINAL_AST', dir_name, 'FINAL AST', False)
 
-    final_ast.errorsManager.printErrors('FINAL_AST')
+    if final_ast.errorsManager.haveErrors():
+        final_ast.errorsManager.printErrors('✖ Final AST building failed')
+        print('\tSuggestion: Check the rule definition on your .yal file')
+        return
+
+    final_ast.draw('FINAL_AST', dir_name, 'FINAL AST', False)
+    print('✔ Final AST building and rendering has been completed successfully')
+    print('✔ All Done!')
 
 
 if __name__ == "__main__":
     main()
+    print('Exiting...')

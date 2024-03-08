@@ -4,14 +4,13 @@
 
 let delim = [' ''\t''\n']
 
-let ws = delimx+
+let ws = delim+
+
 let letter = ['A'-'Z''a'-'z']
 let digit = ['0'-'9']
 let id = letter(letter|digit)*
-
 rule tokens = 
-    ws
-  | id       { return ID }               (* Cambie por una acción válida, que devuelva el token *)
+ chiki       { return ID }               (* Cambie por una acción válida, que devuelva el token *)
   | '+'       { return PLUS }
   | '*'       { return TIMES }
   | '('       { return LPAREN }

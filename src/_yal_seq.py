@@ -126,7 +126,9 @@ class YalSequencer(object):
                         )
                         return False
 
-                    value.extend()
+                    value.extend(
+                        get_original
+                    )
                 else:
                     value.extend(subSymbol.original)
 
