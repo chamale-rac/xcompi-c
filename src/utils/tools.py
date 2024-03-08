@@ -1,4 +1,5 @@
 import argparse
+import os
 
 
 class Error(object):
@@ -88,3 +89,22 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def str2file(v):
+    '''
+    Check if a file exists.
+    '''
+    if not os.path.isfile(v):
+        raise argparse.ArgumentTypeError(f'File {v} does not exist')
+    return v
+
+
+def str2dir(v):
+    '''
+    Check if the name is valid to be assigned to a directory, this means any character may cause an error in naming
+    '''
+    if not v.isidentifier():
+        raise argparse.ArgumentTypeError(
+            f'The name {v} is not a valid directory name')
+    return v

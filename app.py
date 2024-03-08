@@ -2,19 +2,17 @@ import argparse
 
 
 from src._tokenizer import Tokenizer
-from src.utils.tools import readYalFile, str2bool
+from src.utils.tools import readYalFile, str2bool, str2file
 from src.utils.patterns import ID, WS, EQ, EXPR, COMMENT, RETURN, LET, OPERATOR, GROUP, RULE, OR, CHAR
 from src.utils.constants import IDENT, VALUE, MATCH, EXIST, EXTRACT_REMINDER
 from src._yal_seq import YalSequencer as YalSeq
-from src.utils.structures.symbol import Symbol
 from src._expression import Expression
 from src._ast import AbstractSyntaxTree as AST
 
 
 def main():
-
     parser = argparse.ArgumentParser(description="Process some integers.")
-    parser.add_argument('file_path', type=str, help='The file path')
+    parser.add_argument('file_path', type=str2file, help='The file path')
     parser.add_argument('dir_name', type=str, help='The directory name')
     parser.add_argument('draw_subtrees', type=str2bool,
                         help='A boolean flag to draw the subtrees or not.')
