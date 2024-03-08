@@ -1,7 +1,7 @@
 import argparse
 
 
-from src._lexer import Lexer
+from src._tokenizer import Tokenizer
 from src.utils.tools import readYalFile, str2bool
 from src.utils.patterns import ID, WS, EQ, EXPR, COMMENT, RETURN, LET, OPERATOR, GROUP, RULE, OR, CHAR
 from src.utils.constants import IDENT, VALUE, MATCH, EXIST, EXTRACT_REMINDER
@@ -27,7 +27,7 @@ def main():
 
     fileContent = readYalFile(file_path)
 
-    lexer = Lexer(fileContent)
+    lexer = Tokenizer(fileContent)
     lexer.addPatterns([COMMENT, WS, ID, EQ, EXPR, RETURN])
     lexer.tokenize()
     lexer.removeSymbols([COMMENT, RETURN])
@@ -65,7 +65,7 @@ def main():
 
     yal_rule.extractIdent()
 
-    rule_lexer = Lexer()
+    rule_lexer = Tokenizer()
     rule_lexer.symbolsTable = yal_rule.reminders
 
     rule_lexer.removeSymbols([WS])

@@ -3,7 +3,7 @@ from src.utils.structures.symbol import Symbol
 from src._expression import Expression
 
 
-class Lexer(object):
+class Tokenizer(object):
     '''
     This class represents the lexer module.
     '''
@@ -62,7 +62,7 @@ class Lexer(object):
 
     def removeSymbolsByMatch(self, withPattern: Pattern):
         removedAmount = 0
-        internal_lexer = Lexer()
+        internal_lexer = Tokenizer()
         internal_lexer.addPatterns([withPattern])
         for symbol in self.symbolsTable:
             if symbol.type != withPattern.name:

@@ -1,4 +1,4 @@
-from src._lexer import Lexer
+from src._tokenizer import Tokenizer
 from src.utils.patterns import Pattern
 from src.utils.constants import MATCH, EXIST, IDENT, VALUE, EXTRACT_REMINDER
 from src.utils.structures.symbol import Symbol
@@ -10,13 +10,13 @@ class YalSequencer(object):
     This class represents the YAL sequencer.
     '''
 
-    def __init__(self, lexer: Lexer, identSequence: list, exprContains: list[Pattern], extract: Pattern):
+    def __init__(self, lexer: Tokenizer, identSequence: list, exprContains: list[Pattern], extract: Pattern):
         '''
         This is the constructor of the class.
         Parameters: 
         - lexer: A lexer object.
         '''
-        self.lexer: Lexer = lexer
+        self.lexer: Tokenizer = lexer
         self.identSequence: list = identSequence
         self.functions: dict = {
             MATCH: self.match,
@@ -69,7 +69,7 @@ class YalSequencer(object):
         symbol: Symbol = self.lexer.symbolsTable[symbolsPointer]
         sequence: Pattern = self.identSequence[sequencePointer][0]
 
-        lexer = Lexer()
+        lexer = Tokenizer()
         lexer.unCodified = symbol.original
         lexer.codified = symbol.content
         lexer.addPattern(sequence)
@@ -101,7 +101,7 @@ class YalSequencer(object):
         value = []
 
         # TODO: Here I stop, at this point I need to implement the extraction and recognition of EXPR
-        lexer = Lexer()
+        lexer = Tokenizer()
         lexer.unCodified = symbol.original
         lexer.codified = symbol.content
         lexer.addPatterns(self.exprContains)

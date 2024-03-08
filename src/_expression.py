@@ -6,7 +6,7 @@
 @Description: This file contains main algorithms for the regular expression module.
 """
 
-from src.utils.constants import RPAREN, LPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, OPERATORS_PRECEDENCE, TRIVIAL_CHARACTER_PRECEDENCE, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE, WS
+from src.utils.constants import RPAREN, LPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, OPERATORS_PRECEDENCE, TRIVIAL_CHARACTER_PRECEDENCE, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE, WS, ANY_NOT_IN, UNIVERSE, HASHTAG
 from src.utils.tools import errorsManager
 
 
@@ -149,7 +149,7 @@ class Expression(object):
                     result.append(str(i))
                     if i != 255:
                         result.append(OR)
-            elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET, DOUBLE_QUOTE, RANGE, WS]:
+            elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET, DOUBLE_QUOTE, RANGE, WS, ANY_NOT_IN, HASHTAG]:
                 result.append(str(ord(c)))
             else:
                 result.append(c)
@@ -182,12 +182,20 @@ class Expression(object):
         '''
         result = []
         idx = 0
+        first_group = []
+
         while idx < len(infixRegEx):
             c = infixRegEx[idx]
             if c == LBRACKET:
                 idx += 1
                 group_result = []
                 collected = []
+                has_any_not_in = False
+                extend_this = True
+
+                if infixRegEx[idx] == ANY_NOT_IN:
+                    has_any_not_in = True
+                    idx += 1
 
                 while infixRegEx[idx] != RBRACKET:
                     collected.append(infixRegEx[idx])
@@ -196,36 +204,42 @@ class Expression(object):
                 for local_idx in range(len(collected)):
                     if collected[local_idx] == RANGE:
 
-                        # Get the previous character in the collected list
                         previous = collected[local_idx - 1]
-                        # Get the next character in the collected list
                         next = collected[local_idx + 1]
-                        # Add all the characters between the previous and next character
-                        # The previous and next are already in ASCII code, so we can use them as integers
                         for i in range(int(previous), int(next) + 1):
                             group_result.append(str(i))
                     else:
                         group_result.append(collected[local_idx])
 
-                # Avoid repeating, so cast to set
                 group_result = list(set(group_result))
 
-                # Group result need to have a LPAREN at the beginning and a RPAREN at the end
-                # Each item needs to be separated by an OR
-                # Example [LPAREN, 97, OR, 98, OR, 99, RPAREN]
-                group_result.insert(0, LPAREN)
-                for i in range(2, len(group_result)*2, 2):
-                    group_result.insert(i, OR)
-                # Pop the last OR
-                group_result.pop()
-                group_result.append(RPAREN)
+                if has_any_not_in:
+                    group_result = list(set(UNIVERSE) - set(group_result))
 
-                result.extend(
-                    group_result
-                )
+                if first_group != []:
+                    group_result = list(
+                        set(first_group) - set(group_result))
+                    first_group = []
+
+                idx += 1  # Skip the RBRACKET
+                if idx < len(infixRegEx) and infixRegEx[idx] == HASHTAG:
+                    first_group = group_result
+                    extend_this = False
+
+                if extend_this:
+                    group_result.insert(0, LPAREN)
+                    for i in range(2, len(group_result)*2, 2):
+                        group_result.insert(i, OR)
+
+                    group_result.pop()
+                    group_result.append(RPAREN)
+
+                    result.extend(
+                        group_result
+                    )
             else:
                 result.append(c)
-            idx += 1
+                idx += 1
 
         return result
 
