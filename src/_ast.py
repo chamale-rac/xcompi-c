@@ -85,7 +85,7 @@ class AbstractSyntaxTree(object):
     ↑↑ END ALGORITHMS ↑↑
     '''
 
-    def draw(self, name: str, id_: int, label: str = None, cast: bool = False):
+    def draw(self, name: str, id_: int | str, label: str = None, cast: bool = False):
         '''
         This method is made for drawing the abstract syntax tree.
         '''

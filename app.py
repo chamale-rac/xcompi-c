@@ -1,5 +1,8 @@
+import argparse
+
+
 from src._lexer import Lexer
-from src.utils.tools import readYalFile
+from src.utils.tools import readYalFile, str2bool
 from src.utils.patterns import ID, WS, EQ, EXPR, COMMENT, RETURN, LET, OPERATOR, GROUP, RULE, OR, CHAR
 from src.utils.constants import IDENT, VALUE, MATCH, EXIST, EXTRACT_REMINDER
 from src._yal_seq import YalSequencer as YalSeq
@@ -9,15 +12,23 @@ from src._ast import AbstractSyntaxTree as AST
 
 
 def main():
-    file = input("Enter the file name: ")
-    useId = input("Enter the id to use: ")
-    useId = int(useId)
 
-    fileContent = readYalFile(file)
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument('file_path', type=str, help='The file path')
+    parser.add_argument('dir_name', type=str, help='The directory name')
+    parser.add_argument('draw_subtrees', type=str2bool,
+                        help='A boolean flag to draw the subtrees or not.')
+
+    args = parser.parse_args()
+
+    file_path = args.file_path
+    dir_name = args.dir_name
+    draw_subtrees = args.draw_subtrees
+
+    fileContent = readYalFile(file_path)
 
     lexer = Lexer(fileContent)
     lexer.addPatterns([COMMENT, WS, ID, EQ, EXPR, RETURN])
-    lexer.buildPatterns()
     lexer.tokenize()
     lexer.removeSymbols([COMMENT, RETURN])
 
@@ -56,70 +67,41 @@ def main():
 
     rule_lexer = Lexer()
     rule_lexer.symbolsTable = yal_rule.reminders
+
     rule_lexer.removeSymbols([WS])
-    rule_lexer.removeSymbolsByMatch(OR)
-    # removedAmount = rule_lexer.removeSymbolsByMatch(OR)
-    # if removedAmount - 1 == len(rule_lexer.symbolsTable):
-    #     print('The rule was removed')
-    # else:
-    #     # RAISE AN ERROR
-    #     print('Error in definition')
+    removedAmount = rule_lexer.removeSymbolsByMatch(OR)
+    if removedAmount == len(rule_lexer.symbolsTable) - 1:
+        print('The rule was removed')
+    else:
+        # RAISE AN ERROR
+        print('Error in definition')
 
-    for ident in yal_let.idents.keys():
-        thisExpression: Expression = Expression(yal_let.idents[ident])
-        thisExpression.infixRegEx = thisExpression.hardCodify(
-            thisExpression.infixRegEx
-        )
-        thisExpression.infixRegEx = thisExpression.transformGroupsOfCharacters(
-            thisExpression.infixRegEx
-        )
-        thisExpression.infixRegEx = thisExpression.addExplicitConcatenation(
-            thisExpression.infixRegEx
-        )
-        thisExpression.infixRegEx = thisExpression.shuntingYard(
-            thisExpression.infixRegEx
-        )
-        thisAST: AST = AST(thisExpression.infixRegEx)
-        thisAST.draw(ident, useId, ident, False)
+    if draw_subtrees:
+        for ident in yal_let.idents.keys():
+            this_expression: Expression = Expression(yal_let.idents[ident])
+            this_expression.hardProcess()
+            this_ast: AST = AST(this_expression.infixRegEx)
+            this_ast.draw(ident, dir_name, ident, False)
 
-    finalExpression: list = []
+    final_expression: list = []
 
     for symbol in rule_lexer.symbolsTable:
-        symbol: Symbol = symbol
-
         if symbol.type == ID.name:
-            finalExpression.append('(')
-            finalExpression.extend(yal_let.idents[symbol.original])
-            finalExpression.append(')')
+            final_expression.extend(yal_let.idents[symbol.original])
         else:
-            finalExpression.extend([
-                '\\', symbol.original[1]
-            ])
-        finalExpression.append('|')
+            final_expression.extend(symbol.original)
+        final_expression.append('|')
 
-    # Remove the last two characters
-    finalExpression.pop()
+    # Remove the last character, cause the last character is a '|'
+    final_expression.pop()
 
-    finalExpression: Expression = Expression(finalExpression)
-    finalExpression.infixRegEx = finalExpression.hardCodify(
-        finalExpression.infixRegEx
-    )
-    finalExpression.infixRegEx = finalExpression.transformGroupsOfCharacters(
-        finalExpression.infixRegEx
-    )
+    final_expression: Expression = Expression(final_expression)
+    final_expression.hardProcess()
 
-    finalExpression.infixRegEx = finalExpression.addExplicitConcatenation(
-        finalExpression.infixRegEx
-    )
+    final_ast: AST = AST(final_expression.infixRegEx)
+    final_ast.draw('FINAL_AST', dir_name, 'FINAL AST', False)
 
-    finalExpression.infixRegEx = finalExpression.shuntingYard(
-        finalExpression.infixRegEx
-    )
-
-    finalAST: AST = AST(finalExpression.infixRegEx)
-    finalAST.draw('FINAL_AST', useId, 'FINAL AST', False)
-
-    finalAST.errorsManager.printErrors('FINAL_AST')
+    final_ast.errorsManager.printErrors('FINAL_AST')
 
 
 if __name__ == "__main__":

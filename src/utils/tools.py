@@ -1,3 +1,6 @@
+import argparse
+
+
 class Error(object):
     '''
     This class represents an error.
@@ -74,3 +77,14 @@ def numberToLetter(number: int) -> str:
         return chr(96 + number)
     else:
         return numberToLetter((number - 1) // 26) + numberToLetter((number - 1) % 26 + 1)
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')

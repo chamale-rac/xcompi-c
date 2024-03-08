@@ -5,11 +5,8 @@
 @Date: 31/01/2024
 @Description: This file contains main algorithms for the regular expression module.
 """
-# TODO: consider changing the notation for '' and  "" to be detected as a single character
-# TODO: handle when some character is insider '' or "" maybe after detecting groups
-# or maybe not cause I can extract them.
 
-from src.utils.constants import RPAREN, LPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, OPERATORS_PRECEDENCE, TRIVIAL_CHARACTER_PRECEDENCE, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE
+from src.utils.constants import RPAREN, LPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, OPERATORS_PRECEDENCE, TRIVIAL_CHARACTER_PRECEDENCE, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE, WS
 from src.utils.tools import errorsManager
 
 
@@ -27,22 +24,14 @@ class Expression(object):
         self.errorsManager = errorsManager()
         self.infixRegEx: str = infixRegEx
 
-    def preprocess(self):
-        # Step 1: Codify the regular expression using ascii codes, if operator it maintains the same
-        # Step 2: Check parenthesis balance
-        # Step 3: Detect group of characters
-        self.infixRegEx: list = self.hardCodify(self.infixRegEx)
-        if not self.checkBalance():
-            self.errorsManager.addError(
-                'The regular expression has unbalanced parenthesis', 'Invalid regular expression')
-            return
-
-    def process(self):
-        self.infixRegExWithCONCAT: str = self.addExplicitConcatenation(
-            self.infixRegEx)
-        self.postfixRegEx: str = self.shuntingYard(
-            self.infixRegExWithCONCAT)
-
+    def hardProcess(self):
+        '''
+        This function processes the regular expression in infix notation.
+        '''
+        self.infixRegEx = self.hardCodify(self.infixRegEx)
+        self.infixRegEx = self.transformGroupsOfCharacters(self.infixRegEx)
+        self.infixRegEx = self.addExplicitConcatenation(self.infixRegEx)
+        self.infixRegEx = self.shuntingYard(self.infixRegEx)
     '''
     ↓↓ ALGORITHMS ↓↓
     '''
@@ -113,29 +102,6 @@ class Expression(object):
     def getOperatorPrecedence(self, operator): return OPERATORS_PRECEDENCE.get(
         operator, TRIVIAL_CHARACTER_PRECEDENCE)
 
-    def checkBalance(self) -> bool:
-        '''
-        This function checks if the regular expression has balanced parenthesis, brackets, single quotes and double quotes.
-        Returns:
-        - True if the regular expression has balanced parenthesis, brackets, single quotes and double quotes, False otherwise.
-        '''
-        symbols = {LPAREN: 0, LBRACKET: 0,
-                   SINGLE_QUOTE: False, DOUBLE_QUOTE: False}
-        for c in self.infixRegEx:
-            if c in symbols:
-                if c in [SINGLE_QUOTE, DOUBLE_QUOTE]:
-                    symbols[c] = not symbols[c]  # Toggle quote state
-                else:
-                    # Increment count for parenthesis or bracket
-                    symbols[c] += 1
-            elif c in [RPAREN, RBRACKET]:
-                if symbols[LPAREN if c == RPAREN else LBRACKET] == 0:
-                    return False
-                # Decrement count for parenthesis or bracket
-                symbols[LPAREN if c == RPAREN else LBRACKET] -= 1
-        # Check if all counts are zero and quotes are closed
-        return all(not val for val in symbols.values())
-
     def hardCodify(self, infixRegEx: str) -> list:
         '''
         This function takes a regular expression in infix notation and returns the regular expression codified using ascii codes.
@@ -146,36 +112,44 @@ class Expression(object):
         '''
         result = []
         skip_next = False
-        for idx, c in enumerate(infixRegEx):
+        inside_single_quote = False
+        inside_single_quote_len = 0
+        inside_double_quote = False
+        for c in infixRegEx:
             if skip_next:
-                # TODO: Consider special cases as \t, \n and \s
-                if c == 'n':
-                    result.append(str(ord('\n')))
-                elif c == 't':
-                    result.append(str(ord('\t')))
-                elif c == 's':
-                    result.append(str(ord(' ')))
+                if c in ['n', 't', 's']:
+                    translate = {
+                        'n': '\n',
+                        't': '\t',
+                        's': ' '
+                    }
+                    result.append(str(ord(translate[c])))
                 else:
                     result.append(str(ord(c)))
                 skip_next = False
+                if inside_single_quote:
+                    inside_single_quote_len += 1
             elif c == '\\':
                 skip_next = True
-            elif c == ' ':
-                # If is inside a quote add as ASCII code, else appends as is
-                # Check have previous quote
-                if result[-1] in [SINGLE_QUOTE] and infixRegEx[idx+1] in [SINGLE_QUOTE]:
-                    result.append(str(ord(c)))
-                else:
-                    result.append(c)
+            elif c == DOUBLE_QUOTE:
+                inside_double_quote = not inside_double_quote
+            elif inside_double_quote:
+                result.append(str(ord(c)))
+            elif c == SINGLE_QUOTE:
+                if inside_single_quote and inside_single_quote_len > 1:
+                    raise ValueError(
+                        "More than one character inside single quotes")
+                inside_single_quote = not inside_single_quote
+                inside_single_quote_len = 0
+            elif inside_single_quote:
+                result.append(str(ord(c)))
+                inside_single_quote_len += 1
             elif c == '_':
-                print('UNDERSCORE')
-                # Number from 0 to 255, with | operator, ex: 0 | 1 | 2 | ... | 255
                 for i in range(256):
                     result.append(str(i))
                     if i != 255:
                         result.append(OR)
-                print('END UNDERSCORE')
-            elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET, SINGLE_QUOTE, DOUBLE_QUOTE, RANGE]:
+            elif c not in [LPAREN, RPAREN, OR, ZERO_OR_ONE, ONE_OR_MORE, KLEENE_STAR, CONCAT, LBRACKET, RBRACKET, DOUBLE_QUOTE, RANGE, WS]:
                 result.append(str(ord(c)))
             else:
                 result.append(c)
@@ -187,39 +161,15 @@ class Expression(object):
         '''
         result = []
         for idx, c in enumerate(infixRegEx):
-            if c == ' ':
+            if c == WS:
                 # If is inside a quote add as ASCII code, else appends as is
                 # Check have previous quote
-                # TODO:Consider when space is inside a group, ex: "a b"
                 if result[-1] in [str(ord(SINGLE_QUOTE))] and infixRegEx[idx+1] in [SINGLE_QUOTE]:
                     result.append(str(ord(c)))
                 else:
                     result.append(c)
             else:
                 result.append(str(ord(c)))
-        return result
-
-    def transformSingleCharacters(self, infixRegEx: list) -> list:
-        # TODO transform based on double quotes
-        '''
-        This function takes a regular expression in infix notation and returns the single characters in the adequate format.
-        Parameters:
-        - infixRegEx: A regular expression in infix notation.
-        Returns:
-        - A list of characters.
-        '''
-        result = []
-        idx = 0
-        while idx < len(infixRegEx):
-            c = infixRegEx[idx]
-            if c == SINGLE_QUOTE:
-                idx += 1
-                while infixRegEx[idx] != SINGLE_QUOTE:
-                    result.append(infixRegEx[idx])
-                    idx += 1
-            else:
-                result.append(c)
-            idx += 1
         return result
 
     def transformGroupsOfCharacters(self, infixRegEx: list) -> list:
@@ -230,9 +180,6 @@ class Expression(object):
         Returns:
         - A list of characters.
         '''
-        # TODO: verify that both number are valid intervals, example: a-z, not A-z; or 0-9, not 9-0, or 9-Z
-        # TODO: also consider cases when the character isn't inside a quote
-
         result = []
         idx = 0
         while idx < len(infixRegEx):
@@ -243,25 +190,7 @@ class Expression(object):
                 collected = []
 
                 while infixRegEx[idx] != RBRACKET:
-                    if infixRegEx[idx] == SINGLE_QUOTE:
-                        # Skip quote
-                        idx += 1
-                        while infixRegEx[idx] != SINGLE_QUOTE:
-                            if infixRegEx[idx] in [RANGE, ONE_OR_MORE]:
-                                print('RANGE')
-                                collected.append(str(ord(infixRegEx[idx])))
-                            else:
-                                collected.append(infixRegEx[idx])
-                            idx += 1
-                    elif infixRegEx[idx] == DOUBLE_QUOTE:
-                        # Skip quote
-                        idx += 1
-                        while infixRegEx[idx] != DOUBLE_QUOTE:
-                            collected.append(infixRegEx[idx])
-                            idx += 1
-                    elif infixRegEx[idx] == RANGE:
-                        collected.append(infixRegEx[idx])
-
+                    collected.append(infixRegEx[idx])
                     idx += 1
 
                 for local_idx in range(len(collected)):

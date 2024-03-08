@@ -73,7 +73,6 @@ class YalSequencer(object):
         lexer.unCodified = symbol.original
         lexer.codified = symbol.content
         lexer.addPattern(sequence)
-        lexer.buildPatterns()
         lexer.tokenize()
 
         if len(lexer.symbolsTable) == 0:
@@ -107,7 +106,6 @@ class YalSequencer(object):
         lexer.codified = symbol.content
         lexer.addPatterns(self.exprContains)
 
-        lexer.buildPatterns()
         lexer.tokenize(False)
 
         if len(lexer.symbolsTable) > 0:
@@ -115,10 +113,7 @@ class YalSequencer(object):
                 if subSymbol.type == self.extract.name:
                     # Get the definition of the symbol, using the identifier. An looking on idents.
                     value.extend(self.idents.get(subSymbol.original, None))
-                elif subSymbol.type == CHAR.name:
-                    value.append(subSymbol.original[1])
                 else:
-
                     value.extend(subSymbol.original)
 
         self.idents[self.currentIdent] = value

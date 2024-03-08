@@ -38,13 +38,6 @@ class Lexer(object):
         '''
         self.patterns[pattern.name] = pattern
 
-    def buildPatterns(self) -> None:
-        '''
-        This function builds the DFAs for each pattern in the patterns dictionary.
-        '''
-        for idx, pattern in enumerate(self.patterns.values()):
-            pattern.build(idx)
-
     def codifySourceCode(self):
         '''
         This function codifies the source code.
@@ -71,7 +64,6 @@ class Lexer(object):
         removedAmount = 0
         internal_lexer = Lexer()
         internal_lexer.addPatterns([withPattern])
-        internal_lexer.buildPatterns()
         for symbol in self.symbolsTable:
             if symbol.type != withPattern.name:
                 continue

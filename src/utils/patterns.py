@@ -16,6 +16,7 @@ class Pattern(object):
 
         self.name: str = name
         self.pattern: str = pattern
+        self.build(0)
 
     def build(self, idx: int) -> None:
         '''
@@ -107,7 +108,7 @@ GROUP = Pattern(
 
 CHAR = Pattern(
     'CHAR',
-    f"\\'['A'-'Z''a'-'z''0'-'9'' ']\\'"
+    f"\\'['A'-'Z''a'-'z''0'-'9'' ''.']\\'"
 )
 
 # YAL SEQ RULE PASS PATTERNS
@@ -119,4 +120,9 @@ RULE = Pattern(
 OR = Pattern(
     EXPR.name,
     f"\|"
+)
+
+STR = Pattern(
+    'STR',
+    f"(['A'-'Z''a'-'z''0'-'9'' ']|\\\'|\\\"|\\\\|\-|\+)+"
 )
